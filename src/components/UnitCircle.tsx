@@ -87,10 +87,21 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
     }, [onAngleChange]);
 
     // Formatting values
-    const degrees = (angle * 180 / Math.PI).toFixed(0);
+    const degreesVal = (angle * 180 / Math.PI).toFixed(1);
     const sinVal = Math.sin(angle).toFixed(3);
     const cosVal = Math.cos(angle).toFixed(3);
     const tanVal = Math.abs(Math.tan(angle)) > 100 ? '∞' : Math.tan(angle).toFixed(3);
+
+    const cotVal = Math.abs(1 / Math.tan(angle)) > 100 ? '∞' : (1 / Math.tan(angle)).toFixed(3);
+    const secVal = Math.abs(1 / Math.cos(angle)) > 100 ? '∞' : (1 / Math.cos(angle)).toFixed(3);
+    const cscVal = Math.abs(1 / Math.sin(angle)) > 100 ? '∞' : (1 / Math.sin(angle)).toFixed(3);
+
+    // Inverse values (principal values in degrees)
+    // For display, we just show the principal value corresponding to the current function value
+    // Note: asin/acos/atan return radians.
+    const asinDeg = (Math.asin(Math.sin(angle)) * 180 / Math.PI).toFixed(0);
+    const acosDeg = (Math.acos(Math.cos(angle)) * 180 / Math.PI).toFixed(0);
+    const atanDeg = (Math.atan(Math.tan(angle)) * 180 / Math.PI).toFixed(0);
 
     return (
         <div className={styles.container}>
@@ -100,7 +111,7 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                     viewBox={`0 0 ${size} ${size}`}
                     className={styles.svg}
                     onMouseDown={onMouseDown}
-                    // onMouseMove handled globally for smoother drag
+                    // onMouseMove handled globally
                     // onMouseUp handled globally
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
@@ -112,6 +123,77 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
 
                     {/* Main Circle */}
                     <circle cx={center} cy={center} r={radius} fill="none" stroke="currentColor" strokeWidth="1.5" />
+
+                    {/* Lines Logic:
+              - Sin (Red): Vertical from x-axis to point (x,y)
+              - Cos (Blue): Horizontal from center to (x, center)
+              - Tan (Yellow): Vertical at x=radius (right edge), extending to meet radial line
+              - Cot (Orange): Horizontal at y=radius (top edge), extending to meet radial line
+              - Sec (Violet): From center to Tan intersection (on x-axis if we project? No, sec is the hypotenuse of the tan triangle, i.e., from center to x-intercept of tangent line? 
+                Actually, geometrically:
+                1. Point P at angle theta.
+                2. Tangent line at P hits x-axis at (sec, 0) and y-axis at (0, csc).
+                3. Tangent vertical at (1,0) hits radial line at (1, tan).
+                4. Cotangent horizontal at (0,1) hits radial line at (cot, 1).
+          */}
+
+                    {/* Let's implement the Tangent-at-P visualization for Sec/Csc as it's cleaner to see "all lines" */}
+                    {/* Tangent Line at Point P (x,y) */}
+                    {/* Equation of tangent at (cos, sin) is x*cos + y*sin = 1 (normalized) */}
+                    {/* x-intercept (y=0): x = 1/cos = sec */}
+                    {/* y-intercept (x=0): y = 1/sin = csc */}
+
+                    {Math.abs(Math.cos(angle)) > 0.01 && Math.abs(Math.sin(angle)) > 0.01 && (
+                        <line
+                            x1={center + radius * (1 / Math.cos(angle))} y1={center}
+                            x2={center} y2={center - radius * (1 / Math.sin(angle))}
+                            stroke="#666" strokeWidth="0.5" strokeDasharray="2 2"
+                        />
+                    )}
+
+                    {/* Secant Line (Violet) - Segment on x-axis from center to sec-intercept */}
+                    {Math.abs(Math.cos(angle)) > 0.01 && Math.abs(1 / Math.cos(angle)) < 5 && (
+                        <line
+                            x1={center} y1={center}
+                            x2={center + radius * (1 / Math.cos(angle))} y2={center}
+                            stroke="#8b5cf6" strokeWidth="2"
+                        />
+                    )}
+
+                    {/* Cosecant Line (Emerald) - Segment on y-axis from center to csc-intercept */}
+                    {Math.abs(Math.sin(angle)) > 0.01 && Math.abs(1 / Math.sin(angle)) < 5 && (
+                        <line
+                            x1={center} y1={center}
+                            x2={center} y2={center - radius * (1 / Math.sin(angle))}
+                            stroke="#10b981" strokeWidth="2"
+                        />
+                    )}
+
+                    {/* Cotangent Line (Orange) - Segment from (0,1) to (cot, 1) */}
+                    {/* Visualized at y=radius (top) for standard "box" view, or using the tangent-at-P intersection to y-axis? 
+               Standard "all-in-one" often shows Cot as the line on y=1 (top) meeting the radial line.
+               Radial line eq: y = tan(theta) * x.
+               Intersection with y=1 (normalized): 1 = tan * x => x = cot. 
+               So from (0, radius) to (radius * cot, radius).
+            */}
+                    {Math.abs(Math.sin(angle)) > 0.01 && Math.abs(1 / Math.tan(angle)) < 5 && (
+                        <>
+                            {/* Reference line Top (y=1) */}
+                            <line x1={0} y1={center - radius} x2={size} y2={center - radius} stroke="#ccc" strokeWidth="0.5" />
+                            {/* Cot line */}
+                            <line
+                                x1={center} y1={center - radius}
+                                x2={center + radius * (1 / Math.tan(angle))} y2={center - radius}
+                                stroke="#f97316" strokeWidth="2"
+                            />
+                            {/* Radial extension to Cot */}
+                            <line
+                                x1={center} y1={center}
+                                x2={center + radius * (1 / Math.tan(angle))} y2={center - radius}
+                                stroke="#f97316" strokeWidth="0.5" strokeDasharray="2 2" opacity="0.5"
+                            />
+                        </>
+                    )}
 
                     {/* Cosine Line (Blue) */}
                     <line
@@ -130,9 +212,9 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                     />
 
                     {/* Radius Line */}
-                    <line x1={center} y1={center} x2={x} y2={y} stroke="currentColor" strokeWidth="1" strokeDasharray="4 2" opacity="0.5" />
+                    <line x1={center} y1={center} x2={x} y2={y} stroke="currentColor" strokeWidth="1.5" />
 
-                    {/* Tangent Line (Yellow) */}
+                    {/* Tangent Line (Yellow) - Vertical at x=1 */}
                     {Math.abs(Math.tan(angle)) < 10 && Math.abs(Math.cos(angle)) > 0.01 && (
                         <line
                             x1={center + radius}
@@ -163,14 +245,14 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                         stroke="currentColor"
                         strokeWidth="1"
                     />
-                    <text x={center + 40} y={center - 40} fontSize="14" fill="currentColor">{degrees}°</text>
+                    <text x={center + 40} y={center - 40} fontSize="14" fill="currentColor">{degreesVal}°</text>
 
                 </svg>
             </div>
 
             <div className={styles.controls}>
                 <div className={styles.sliderContainer}>
-                    <label>Angle: {degrees}° / {(angle / Math.PI).toFixed(2)}π</label>
+                    <label>Angle: {degreesVal}° / {(angle / Math.PI).toFixed(2)}π</label>
                     <input
                         type="range"
                         min="0"
@@ -181,6 +263,7 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                     />
                 </div>
 
+                <div className={styles.sectionTitle}>Basic</div>
                 <div className={styles.values}>
                     <div className={`${styles.valueCard} ${styles.sin}`}>
                         <h3>SIN</h3>
@@ -193,6 +276,38 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                     <div className={`${styles.valueCard} ${styles.tan}`}>
                         <h3>TAN</h3>
                         <p>{tanVal}</p>
+                    </div>
+                </div>
+
+                <div className={styles.sectionTitle}>Reciprocal</div>
+                <div className={styles.values}>
+                    <div className={`${styles.valueCard} ${styles.csc}`}>
+                        <h3>CSC</h3>
+                        <p>{cscVal}</p>
+                    </div>
+                    <div className={`${styles.valueCard} ${styles.sec}`}>
+                        <h3>SEC</h3>
+                        <p>{secVal}</p>
+                    </div>
+                    <div className={`${styles.valueCard} ${styles.cot}`}>
+                        <h3>COT</h3>
+                        <p>{cotVal}</p>
+                    </div>
+                </div>
+
+                <div className={styles.sectionTitle}>Inverse (Principal)</div>
+                <div className={styles.values}>
+                    <div className={`${styles.valueCard} ${styles.inv}`}>
+                        <h3>ASIN</h3>
+                        <p>{asinDeg}°</p>
+                    </div>
+                    <div className={`${styles.valueCard} ${styles.inv}`}>
+                        <h3>ACOS</h3>
+                        <p>{acosDeg}°</p>
+                    </div>
+                    <div className={`${styles.valueCard} ${styles.inv}`}>
+                        <h3>ATAN</h3>
+                        <p>{atanDeg}°</p>
                     </div>
                 </div>
             </div>
