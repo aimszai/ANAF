@@ -1,0 +1,40 @@
+.container {
+    width: 100%;
+    background: rgba(var(--card-rgb), 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(var(--card-border-rgb), 0.1);
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.svgContainer {
+    width: 100%;
+    height: 200px;
+    position: relative;
+}
+
+.svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
