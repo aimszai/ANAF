@@ -46,19 +46,17 @@ export default function WaveDiagram({ angle }: WaveDiagramProps) {
     const sinPath = generatePath(Math.sin);
     const cosPath = generatePath(Math.cos);
 
-    // Tan needs special handling / multiple paths to avoid connecting asymptotes
-    // But for now, let's just stick to sin/cos as primary, and maybe tan if requested explicitly or handle carefully.
-    // The user asked for "sin, cos, etc."
-    // Let's draw tan but break it at asymptotes (PI/2, 3PI/2)
-    const generateTanPath = () => {
+    // Helper for discontinuous paths (tan, sec, csc, cot)
+    const generateDiscontinuousPath = (func: (x: number) => number) => {
         let d = "";
         let isDrawing = false;
         for (let i = 0; i <= points; i++) {
             const t = (i / points) * 2 * Math.PI;
             const x = padding + (i / points) * plotWidth;
-            const val = Math.tan(t);
+            const val = func(t);
 
-            if (Math.abs(val) > 3) {
+            // Check for undefined or asymptotic values
+            if (!isFinite(val) || Math.abs(val) > 3) {
                 isDrawing = false;
                 continue;
             }
@@ -74,7 +72,11 @@ export default function WaveDiagram({ angle }: WaveDiagramProps) {
         }
         return d;
     }
-    const tanPath = generateTanPath();
+
+    const tanPath = generateDiscontinuousPath(Math.tan);
+    const cotPath = generateDiscontinuousPath((x) => 1 / Math.tan(x));
+    const secPath = generateDiscontinuousPath((x) => 1 / Math.cos(x));
+    const cscPath = generateDiscontinuousPath((x) => 1 / Math.sin(x));
 
 
     // Current indicator
@@ -87,8 +89,13 @@ export default function WaveDiagram({ angle }: WaveDiagramProps) {
     // Intersection points
     const sinY = centerY - Math.sin(angle) * amplitudeScale;
     const cosY = centerY - Math.cos(angle) * amplitudeScale;
-    const tanVal = Math.tan(angle);
-    const tanY = Math.abs(tanVal) > 3 ? null : centerY - tanVal * amplitudeScale;
+
+    const getPointY = (val: number) => Math.abs(val) > 3 ? null : centerY - val * amplitudeScale;
+
+    const tanY = getPointY(Math.tan(angle));
+    const cotY = getPointY(1 / Math.tan(angle));
+    const secY = getPointY(1 / Math.cos(angle));
+    const cscY = getPointY(1 / Math.sin(angle));
 
     return (
         <div className={styles.container}>
@@ -103,8 +110,13 @@ export default function WaveDiagram({ angle }: WaveDiagramProps) {
                     <text x={padding + plotWidth / 2} y={centerY + 20} fontSize="12" fill="#999" textAnchor="middle">π (180°)</text>
                     <text x={width - padding} y={centerY + 20} fontSize="12" fill="#999" textAnchor="middle">2π (360°)</text>
 
-                    {/* Paths */}
+                    {/* Secondary Paths (Dashed/Thinner) */}
+                    <path d={secPath} stroke="#8b5cf6" strokeWidth="1.5" fill="none" strokeDasharray="4 4" opacity="0.6" />
+                    <path d={cscPath} stroke="#10b981" strokeWidth="1.5" fill="none" strokeDasharray="4 4" opacity="0.6" />
+                    <path d={cotPath} stroke="#f97316" strokeWidth="1.5" fill="none" strokeDasharray="4 4" opacity="0.6" />
                     <path d={tanPath} stroke="#eab308" strokeWidth="1.5" fill="none" strokeDasharray="4 4" opacity="0.6" />
+
+                    {/* Primary Paths */}
                     <path d={sinPath} stroke="#ef4444" strokeWidth="2" fill="none" />
                     <path d={cosPath} stroke="#3b82f6" strokeWidth="2" fill="none" />
 
@@ -112,24 +124,40 @@ export default function WaveDiagram({ angle }: WaveDiagramProps) {
                     <line x1={currentX} y1={padding} x2={currentX} y2={height - padding} stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
 
                     {/* Intersection Dots */}
+                    {secY !== null && <circle cx={currentX} cy={secY} r="3" fill="#8b5cf6" />}
+                    {cscY !== null && <circle cx={currentX} cy={cscY} r="3" fill="#10b981" />}
+                    {cotY !== null && <circle cx={currentX} cy={cotY} r="3" fill="#f97316" />}
+                    {tanY !== null && <circle cx={currentX} cy={tanY} r="3" fill="#eab308" />}
+
                     <circle cx={currentX} cy={sinY} r="4" fill="#ef4444" />
                     <circle cx={currentX} cy={cosY} r="4" fill="#3b82f6" />
-                    {tanY !== null && <circle cx={currentX} cy={tanY} r="3" fill="#eab308" />}
                 </svg>
             </div>
 
             <div className={styles.legend}>
                 <div className={styles.legendItem}>
                     <div className={styles.dot} style={{ background: '#ef4444' }} />
-                    <span>sin(x)</span>
+                    <span>sin</span>
                 </div>
                 <div className={styles.legendItem}>
                     <div className={styles.dot} style={{ background: '#3b82f6' }} />
-                    <span>cos(x)</span>
+                    <span>cos</span>
                 </div>
                 <div className={styles.legendItem}>
                     <div className={styles.dot} style={{ background: '#eab308' }} />
-                    <span>tan(x)</span>
+                    <span>tan</span>
+                </div>
+                <div className={styles.legendItem}>
+                    <div className={styles.dot} style={{ background: '#10b981' }} />
+                    <span>csc</span>
+                </div>
+                <div className={styles.legendItem}>
+                    <div className={styles.dot} style={{ background: '#8b5cf6' }} />
+                    <span>sec</span>
+                </div>
+                <div className={styles.legendItem}>
+                    <div className={styles.dot} style={{ background: '#f97316' }} />
+                    <span>cot</span>
                 </div>
             </div>
         </div>
