@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import UnitCircle from '@/components/UnitCircle';
 import WaveDiagram from '@/components/WaveDiagram';
+import PythagoreanIdentity from '@/components/PythagoreanIdentity';
 
 export default function Home() {
   const [angle, setAngle] = useState(Math.PI / 4);
@@ -36,15 +37,21 @@ export default function Home() {
           <UnitCircle angle={angle} onAngleChange={setAngle} />
         </div>
 
-        {/* Wave Diagram Section */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '1.2rem', opacity: 0.9 }}>Wave Function</h2>
-          <div style={{ width: '100%' }}>
-            <WaveDiagram angle={angle} />
+        {/* Wave Diagram & Identity Section */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', width: '100%' }}>
+            <h2 style={{ fontSize: '1.2rem', opacity: 0.9 }}>Wave Function</h2>
+            <div style={{ width: '100%' }}>
+              <WaveDiagram angle={angle} />
+            </div>
+            <p style={{ fontSize: '0.9rem', opacity: 0.7, textAlign: 'center', maxWidth: '400px' }}>
+              The x-axis represents the angle in radians (and degrees). The y-axis shows the value of the trigonometric function.
+            </p>
           </div>
-          <p style={{ fontSize: '0.9rem', opacity: 0.7, textAlign: 'center', maxWidth: '400px' }}>
-            The x-axis represents the angle in radians (and degrees). The y-axis shows the value of the trigonometric function.
-          </p>
+
+          <PythagoreanIdentity angle={angle} />
+
         </div>
       </div>
 
