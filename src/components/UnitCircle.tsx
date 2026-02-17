@@ -157,8 +157,13 @@ export default function UnitCircle({ angle, onAngleChange }: UnitCircleProps) {
                     <circle cx={x} cy={y} r="6" fill="currentColor" cursor="pointer" />
 
                     {/* Angle Arc */}
-                    <path d={`M ${center + 20} ${center} A 20 20 0 ${angle > Math.PI ? 1 : 0} 0 ${center + 20 * Math.cos(angle)} ${center - 20 * Math.sin(angle)}`} fill="none" stroke="#999" />
-                    <text x={center + 30} y={center - 30} fontSize="14" fill="#666">{degrees}°</text>
+                    <path
+                        d={`M ${center} ${center} L ${center + 30} ${center} A 30 30 0 ${angle > Math.PI ? 1 : 0} 0 ${center + 30 * Math.cos(angle)} ${center - 30 * Math.sin(angle)} Z`}
+                        fill="rgba(100, 100, 100, 0.2)"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                    />
+                    <text x={center + 40} y={center - 40} fontSize="14" fill="currentColor">{degrees}°</text>
 
                 </svg>
             </div>
